@@ -22,7 +22,7 @@ typedef struct allocator {
     /** Function for reallocating memory */
     void *(*reallocate)(struct allocator alloc, void *ptr, size_t size);
 
-    /**< Function pointer for freeing memory */
+    /** Function pointer for freeing memory */
     void (*deallocate)(struct allocator alloc, void *ptr);
 } Allocator;
 
