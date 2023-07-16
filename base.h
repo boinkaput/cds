@@ -20,4 +20,5 @@
 typedef void (*map_fn)(void *);
 typedef bool (*pred_fn)(void *);
 
+
 #endif // ASSERT_H

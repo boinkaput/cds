@@ -37,11 +37,10 @@ void *internal_vec_with_cap(size_t capacity, size_t elem_size,
     return vector;
 }
 
-void *internal_vec_from_arr(void *array, size_t array_size, size_t elem_size,
-                            Allocator alloc) {
-    void *vector = internal_vec_with_cap(array_size, elem_size, alloc);
-    memcpy(vector, array, elem_size * array_size);
-    VECTOR_META_PTR(vector)->size = array_size;
+void *internal_vec_from_slice(Slice slice, Allocator alloc) {
+    void *vector = internal_vec_with_cap(slice.size, slice.elem_size, alloc);
+    memcpy(vector, slice.array, slice.elem_size * slice.size);
+    VECTOR_META_PTR(vector)->size = slice.size;
     return vector;
 }
 
@@ -82,15 +81,15 @@ void *internal_vec_push_back(void *vector, void *elem) {
     return vector;
 }
 
-void *internal_vec_extend(void *vector, void *array, size_t array_size) {
+void *internal_vec_extend(void *vector, Slice slice) {
     VectorMeta *vector_meta = VECTOR_META_PTR(vector);
-    size_t total_size = vector_meta->size + array_size;
+    size_t total_size = vector_meta->size + slice.size;
     vector = resize(&vector_meta, find_new_capacity(vector_meta->capacity,
                                                     total_size));
     ASSERT(vector != NULL, "Out of memory");
     memmove(vector + (vector_meta->size * vector_meta->elem_size),
-            array, array_size * vector_meta->elem_size);
-    vector_meta->size += array_size;
+            slice.array, slice.size * vector_meta->elem_size);
+    vector_meta->size += slice.size;
     return vector;
 }
 
@@ -158,15 +157,16 @@ void *vec_shrink(void *vector) {
     return vector;
 }
 
-size_t vec_slice(void *vector, size_t start, size_t end, void *buffer) {
+Slice vec_slice(void *vector, size_t start, size_t end) {
     VectorMeta *vector_meta = VECTOR_META_PTR(vector);
-    ASSERT(buffer != NULL, "buffer should not be NULL");
     ASSERT(start <= end, "start (is %zu) should be <= end (is %zu)", start, end);
     ASSERT(end <= vector_meta->size, "end (is %zu) should be <= vector_size (is %zu)",
            end, vector_meta->size);
-    memmove(buffer, vector + (start * vector_meta->elem_size),
-            (end - start) * vector_meta->elem_size);
-    return end - start;
+    return (Slice) {
+        .array = vector + (start * vector_meta->elem_size),
+        .size = end - start,
+        .elem_size = vector_meta->elem_size
+    };
 }
 
 Iterator vec_iter(void *vector) {

@@ -24,24 +24,26 @@ void iter_reduce(Iterator *iterator, void (*func)(void *, void *),
 
 /*--------------------------------- ForEach ---------------------------------*/
 
-#define FOR_EACH(type, variable, iterator, body) {                             \
-    Iterator _it = iterator;                                                   \
-    for (Option option = iter_next(_it); option.is_valid;                      \
-         option = iter_next(_it)) {                                            \
-        type variable = option_unwrap(option, type);                           \
-        body                                                                   \
-    }                                                                          \
-}
+#define for_each(type, variable, iterator, body)                               \
+    do {                                                                       \
+        Iterator _it = iterator;                                               \
+        for (Option option = iter_next(_it); option.is_valid;                  \
+            option = iter_next(_it)) {                                         \
+            type variable = option_unwrap(option, type);                       \
+            body                                                               \
+        }                                                                      \
+    } while(0)
 
-#define FOR_EACH_STEP(type, variable, iterator, step, body) {                  \
-    Iterator _it = iterator;                                                   \
-    size_t st = step;                                                          \
-    for (Option option = iter_advance(_it, st); option.is_valid;               \
-         option = iter_advance(_it, st)) {                                     \
-        type variable = option_unwrap(option, type);                           \
-        body                                                                   \
-    }                                                                          \
-}
+#define for_each_step(type, variable, iterator, step, body)                    \
+    do {                                                                       \
+        Iterator _it = iterator;                                               \
+        size_t st = step;                                                      \
+        for (Option option = iter_advance(_it, st); option.is_valid;           \
+            option = iter_advance(_it, st)) {                                  \
+            type variable = option_unwrap(option, type);                       \
+            body                                                               \
+        }                                                                      \
+    } while (0)
 
 /*--------------------------------- IterMap ---------------------------------*/
 
