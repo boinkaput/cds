@@ -1,5 +1,10 @@
 #include "../iter_utils.h"
 
+static Option mit_next(Iterator *iterator);
+static Option mit_advance(Iterator *iterator, size_t n);
+static Option fit_next(Iterator *iterator);
+static Option fit_advance(Iterator *iterator, size_t n);
+
 bool iter_all(Iterator *iterator, pred_fn p) {
     for (Option option = iter_next(*iterator); option.is_valid;
          option = iter_next(*iterator)) {
@@ -73,16 +78,62 @@ Option iter_last(Iterator *iterator) {
     return option_prev;
 }
 
-void iter_fold(Iterator *iterator, void (*func)(void *, void *), void *init) {
+void iter_reduce(Iterator *iterator, void (*func)(void *, void *), void *init) {
     for (Option option = iter_next(*iterator); option.is_valid;
          option = iter_next(*iterator)) {
         func(init, option.value);
     }
 }
 
-void iter_reduce(Iterator *iterator, void (*func)(void *, void *), Option *option) {
-    *option = iter_next(*iterator);
-    if (option->is_valid) {
-        iter_fold(iterator, func, option->value);
-    }
+Map map_new(Iterator *iterator, map_fn f) {
+    return (Map) {
+        .iterator = iterator,
+        .f = f
+    };
+}
+
+Iterator map_iter(Map *map) {
+    Iterator iterator = iter_default(NULL, map, mit_next);
+    iterator.advance = mit_advance;
+    iterator.size = map->iterator->size;
+    return iterator;
+}
+
+Filter filter_new(Iterator *iterator, pred_fn p) {
+    return (Filter) {
+        .iterator = iterator,
+        .p = p
+    };
+}
+
+Iterator filter_iter(Filter *filter) {
+    Iterator iterator = iter_default(NULL, filter, fit_next);
+    iterator.advance = fit_advance;
+    iterator.size = filter->iterator->size;
+    return iterator;
+}
+
+static Option mit_next(Iterator *iterator) {
+    Map *current = iterator->current;
+    Option option = iter_next(*(current->iterator));
+    option_map(option, current->f);
+    return option;
+}
+
+static Option mit_advance(Iterator *iterator, size_t n) {
+    Map *current = iterator->current;
+    Option option = iter_advance(*(current->iterator), n);
+    option_map(option, current->f);
+    return option;
+}
+
+static Option fit_next(Iterator *iterator) {
+    Filter *current = iterator->current;
+    return iter_find(current->iterator, current->p);
+}
+
+static Option fit_advance(Iterator *iterator, size_t n) {
+    Filter *current = iterator->current;
+    iter_advance(*(current->iterator), n);
+    return iter_find(iterator, current->p);
 }

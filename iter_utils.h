@@ -4,19 +4,19 @@
 #include "iterator.h"
 
 #define FOR_EACH(type, variable, iterator, body) {                             \
-    Iterator it = iterator;                                                    \
-    for (Option option = iter_next(it); option.is_valid;                       \
-         option = iter_next(it)) {                                             \
+    Iterator _it = iterator;                                                   \
+    for (Option option = iter_next(_it); option.is_valid;                      \
+         option = iter_next(_it)) {                                            \
         type variable = option_unwrap(option, type);                           \
         body                                                                   \
     }                                                                          \
 }
 
 #define FOR_EACH_STEP(type, variable, iterator, step, body) {                  \
-    Iterator it = iterator;                                                    \
+    Iterator _it = iterator;                                                   \
     size_t st = step;                                                          \
-    for (Option option = iter_advance(it, st); option.is_valid;                \
-         option = iter_advance(it, st)) {                                      \
+    for (Option option = iter_advance(_it, st); option.is_valid;               \
+         option = iter_advance(_it, st)) {                                     \
         type variable = option_unwrap(option, type);                           \
         body                                                                   \
     }                                                                          \
@@ -38,11 +38,29 @@ bool iter_is_sorted(Iterator *iterator, bool (*comp)(void *, void *));
 
 Option iter_last(Iterator *iterator);
 
-void iter_fold(Iterator *iterator, void (*func)(void *, void *),
-               void *init);
-
 void iter_reduce(Iterator *iterator, void (*func)(void *, void *),
-                 Option *option);
+                 void *init);
 
+/*--------------------------------- IterMap ---------------------------------*/
+
+typedef struct {
+    Iterator *iterator;
+    map_fn f;
+} Map;
+
+Map map_new(Iterator *iterator, map_fn f);
+
+Iterator map_iter(Map *map);
+
+/*------------------------------- IterFilter ---------------------------------*/
+
+typedef struct {
+    Iterator *iterator;
+    pred_fn p;
+} Filter;
+
+Filter filter_new(Iterator *iterator, pred_fn p);
+
+Iterator filter_iter(Filter *filter);
 
 #endif // ITER_UTILS_H
