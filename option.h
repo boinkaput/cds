@@ -8,6 +8,8 @@ typedef struct {
     bool is_valid;
 } Option;
 
+typedef Option (*map_opt_fn)(void *);
+
 Option option_none();
 
 Option option_some(void *value);
@@ -16,7 +18,7 @@ Option option_or(Option option1, Option option2);
 
 Option option_and(Option option1, Option option2);
 
-Option option_and_then(Option option, Option (*fn)(void *));
+Option option_and_then(Option option, map_opt_fn f);
 
 void option_map(Option option, map_fn f);
 

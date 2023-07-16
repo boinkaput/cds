@@ -52,8 +52,8 @@ void test_option_and_then() {
     int i = 1;
     Option opt1 = option_some(&i);
     Option opt2 = option_none();
-    assert(option_unwrap(option_and_then(opt1, (Option (*)(void *)) then), int) == 6);
-    assert(!option_and_then(opt2, (Option (*)(void *)) then).is_valid);
+    assert(option_unwrap(option_and_then(opt1, (map_opt_fn) then), int) == 6);
+    assert(!option_and_then(opt2, (map_opt_fn) then).is_valid);
 }
 
 void map(int *k) {
@@ -104,7 +104,7 @@ void test_option_alloc() {
     Option opt = option_some(i);
     assert(option_unwrap(opt, int) == 5);
     option_map(opt, (map_fn) map);
-    assert(option_unwrap(option_and_then(opt, (Option (*)(void *)) then), int) == 13);
+    assert(option_unwrap(option_and_then(opt, (map_opt_fn) then), int) == 13);
     assert(!option_filter(opt, (pred_fn) filter1).is_valid);
     free(opt.value);
 }

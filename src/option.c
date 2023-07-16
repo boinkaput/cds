@@ -24,9 +24,9 @@ Option option_and(Option option1, Option option2) {
     return option1.is_valid ? option2 : option_none();
 }
 
-Option option_and_then(Option option, Option (*fn)(void *)) {
+Option option_and_then(Option option, map_opt_fn f) {
     if (option.is_valid) {
-        return fn(option.value);
+        return f(option.value);
     } else {
         return option_none();
     }
