@@ -6,7 +6,7 @@ static void *default_alloc(Allocator alloc, size_t size);
 static void *default_realloc(Allocator alloc, void *ptr, size_t size);
 static void default_dealloc(Allocator alloc, void *ptr);
 
-Allocator allocator_default() {
+Allocator allocator_new() {
     return (Allocator) {
         .ctx = NULL,
         .allocate = default_alloc,

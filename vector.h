@@ -10,14 +10,14 @@
 
 #ifndef VECTOR_ALLOCATOR
 #define vec_new(elem_type)                                                     \
-    internal_vec_new(sizeof(elem_type), allocator_default())
+    internal_vec_new(sizeof(elem_type), allocator_new())
 
 #define vec_with_capacity(elem_type, capacity)                                 \
-    internal_vec_with_cap(capacity, sizeof(elem_type), allocator_default())
+    internal_vec_with_cap(capacity, sizeof(elem_type), allocator_new())
 
 #define vec_from_array(elem_type, array, array_size)                           \
     internal_vec_from_arr(array, array_size, sizeof(elem_type),                \
-                          allocator_default())
+                          allocator_new())
 #else
 #define vec_new(elem_type, allocator)                                          \
     internal_vec_new(sizeof(elem_type), allocator)
