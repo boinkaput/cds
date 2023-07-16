@@ -12,12 +12,12 @@ TESTS   = $(patsubst $(TESTDIR)/%.c, $(BINDIR)/%, $(wildcard $(TESTDIR)/*.c))
 all: $(OBJDIR) $(BINDIR) $(TESTS)
 
 test: $(OBJDIR) $(BINDIR) $(TESTS)
-    @for test in $(TESTS); do 												   \
-        if $$test; then 													   \
-            echo "\e[32mPassed $$(basename $$test)\e[0m"; 					   \
-        else 																   \
-            echo "\e[31mFailed $$(basename $$test)\e[0m"; 					   \
-        fi 																	   \
+    @for test in $(TESTS); do                                                  \
+        if $$test; then                                                        \
+            echo "\e[32mPassed $$(basename $$test)\e[0m";                      \
+        else                                                                   \
+            echo "\e[31mFailed $$(basename $$test)\e[0m";                      \
+        fi                                                                     \
     done
 
 $(OBJDIR):
