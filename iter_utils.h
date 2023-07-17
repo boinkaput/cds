@@ -17,6 +17,9 @@ bool iter_is_partitioned(Iterator *iterator, pred_fn p);
 
 bool iter_is_sorted(Iterator *iterator, bool (*comp)(void *, void *));
 
+bool iter_compare(Iterator *iterator1, Iterator *iterator2,
+                  bool (*comp)(void *, void *));
+
 Option iter_last(Iterator *iterator);
 
 void iter_reduce(Iterator *iterator, void (*func)(void *, void *),

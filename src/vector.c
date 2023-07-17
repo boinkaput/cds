@@ -1,7 +1,7 @@
 #include <string.h>
 
-#include "../vector.h"
 #include "../base.h"
+#include "../vector.h"
 
 typedef struct {
     size_t capacity;
@@ -15,6 +15,7 @@ typedef struct {
 
 static void *resize(VectorMeta **vector_meta_p, size_t new_capacity);
 static size_t find_new_capacity(size_t current_capacity, size_t required_capacity);
+static void swap(void *ptr1, void *ptr2, size_t size);
 static Option vit_next(Iterator *iterator);
 static Option vit_advance(Iterator *iterator, size_t n);
 static size_t vit_size(Iterator *iterator);
@@ -41,6 +42,15 @@ void *internal_vec_from_slice(Slice slice, Allocator alloc) {
     void *vector = internal_vec_with_cap(slice.size, slice.elem_size, alloc);
     memcpy(vector, slice.array, slice.elem_size * slice.size);
     VECTOR_META_PTR(vector)->size = slice.size;
+    return vector;
+}
+
+void *internal_vec_from_iter(Iterator iterator, size_t elem_size, Allocator alloc) {
+    void *vector = internal_vec_new(elem_size, alloc);
+    for (Option option = iter_next(iterator); option.is_valid;
+         option = iter_next(iterator)) {
+        vector = internal_vec_push_back(vector, option.value);
+    }
     return vector;
 }
 
@@ -169,6 +179,15 @@ Slice vec_slice(void *vector, size_t start, size_t end) {
     };
 }
 
+void vec_reverse(void *vector) {
+    VectorMeta *vector_meta = VECTOR_META_PTR(vector);
+    for (size_t i = 0, j = vector_meta->size - 1; i < j; ++i, --j) {
+        swap(vector + (i * vector_meta->elem_size),
+             vector + (j * vector_meta->elem_size),
+             vector_meta->elem_size);
+    }
+}
+
 Iterator vec_iter(void *vector) {
     Iterator iterator = iter_default(vector, vector, vit_next);
     iterator.advance = vit_advance;
@@ -196,6 +215,13 @@ static size_t find_new_capacity(size_t current_capacity, size_t required_capacit
         current_capacity *= 2;
     }
     return current_capacity;
+}
+
+static void swap(void *ptr1, void *ptr2, size_t size) {
+    char temp[size];
+    memcpy(temp, ptr1, size);
+    memcpy(ptr1, ptr2, size);
+    memcpy(ptr2, temp, size);
 }
 
 static Option vit_next(Iterator *iterator) {

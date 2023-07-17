@@ -71,6 +71,19 @@ bool iter_is_sorted(Iterator *iterator, bool (*comp)(void *, void *)) {
     return true;
 }
 
+bool iter_compare(Iterator *iterator1, Iterator *iterator2,
+                  bool (*comp)(void *, void *)) {
+    Option option1 = iter_next(*iterator1);
+    Option option2 = iter_next(*iterator2);
+    for (; option_and(option1, option2).is_valid;
+         option1 = iter_next(*iterator1), option2 = iter_next(*iterator2)) {
+        if (!comp(option1.value, option2.value)) {
+            return false;
+        }
+    }
+    return !option_or(option1, option2).is_valid;
+}
+
 Option iter_last(Iterator *iterator) {
     Option option_prev = iter_next(*iterator);
     for (Option option = iter_next(*iterator); option.is_valid;

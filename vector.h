@@ -50,7 +50,16 @@
 #define vec_from_slice(slice)                                                  \
     internal_vec_from_slice(slice, allocator_new())
 
-#else
+/**
+ * @brief Creates a new vector by copying elements from an iterator.
+ * @param elem_type The type of the elements in the vector.
+ * @param iterator The iterator providing the elements to copy.
+ * @return A pointer to the new vector.
+ */
+#define vec_from_iter(elem_type, iterator)                                     \
+    internal_vec_from_iter(iterator, sizeof(elem_type), allocator_new())
+
+#else // ifdef VECTOR_ALLOCATOR
 
 /**
  * @brief Creates a new vector with the specified element type and
@@ -81,6 +90,17 @@
  */
 #define vec_from_slice(slice, allocator)                                       \
     internal_vec_from_slice(slice, allocator)
+
+/**
+ * @brief Creates a new vector by copying elements from an iterator
+ * with a custom allocator.
+ * @param elem_type The type of the elements in the vector.
+ * @param iterator The iterator providing the elements to copy.
+ * @param allocator The custom allocator for memory allocation.
+ * @return A pointer to the new vector.
+ */
+#define vec_from_iter(elem_type, iterator, allocator)                          \
+    internal_vec_from_iter(iterator, sizeof(elem_type), allocator)
 
 #endif // VECTOR_ALLOCATOR
 
@@ -203,13 +223,19 @@ void *vec_shrink(void *vector);
 Slice vec_slice(void *vector, size_t start, size_t end);
 
 /**
+ * @brief Reverses the order of elements in the vector in place.
+ * @param vector The vector to reverse.
+ */
+void vec_reverse(void *vector);
+
+/**
  * @brief Creates an iterator for the vector.
  * @param vector The vector.
  * @return An iterator for the vector.
  */
 Iterator vec_iter(void *vector);
 
-/*-------------------------- Functions used by API --------------------------*/
+/*------------------------ Internal Helper Functions ------------------------*/
 
 /**
  * @brief Internal function to create a new vector.
@@ -237,7 +263,18 @@ void *internal_vec_with_cap(size_t capacity, size_t elem_size, Allocator alloc);
 void *internal_vec_from_slice(Slice slice, Allocator alloc);
 
 /**
- * @brief Internal function to insert an element into the vector at the specified index.
+ * @brief Internal function to Create a new vector by copying elements from
+ * an iterator.
+ * @param iterator The iterator providing the elements to copy.
+ * @param elem_size The size of each element in the vector.
+ * @param alloc The allocator for memory allocation.
+ * @return A pointer to the new vector.
+ */
+void *internal_vec_from_iter(Iterator iterator, size_t elem_size, Allocator alloc);
+
+/**
+ * @brief Internal function to insert an element into the vector at the
+ * specified index.
  * @param vector The vector.
  * @param elem A pointer to the element to insert.
  * @param index The index at which to insert the element.
