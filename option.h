@@ -21,10 +21,12 @@ typedef struct {
 } Option;
 
 /**
- * @typedef Option (*map_opt_fn)(void *)
- * @brief Function pointer for mapping a value to an Option.
+ * @typedef Option (*map_opt_fn)(void *value)
+ * @brief Function pointer type for mapping a value to an Option.
+ * @param value The value to be mapped.
+ * @return The resulting Option from the mapping operation.
  */
-typedef Option (*map_opt_fn)(void *);
+typedef Option (*map_opt_fn)(void *value);
 
 /**
  * @brief Creates an Option that wraps a NULL ptr.
