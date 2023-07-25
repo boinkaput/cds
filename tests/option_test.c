@@ -271,6 +271,7 @@ int main(int argc, char *argv[]) {
     test_option_and_then();
     test_option_map();
     test_option_filter();
+    test_option_flatten();
     test_option_alloc();
     test_option_unwrap_or_complex();
     test_option_complex_combine();
