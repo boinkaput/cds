@@ -261,7 +261,7 @@ void test_option_alloc_complex() {
     free(comp);
 }
 
-int main(int argc, char *argv[]) {
+int main() {
     test_option_none();
     test_option_some();
     test_option_unwrap_or_valid();
