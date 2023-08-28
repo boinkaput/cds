@@ -1,5 +1,5 @@
 CC      = gcc
-CFLAGS  = -g -Wall
+CFLAGS  = -g -pedantic -Wall -Wextra -Wno-override-init -Wno-override-init-side-effects
 VFLAGS  = --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose
 BASEDIR = $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 SRCDIR  = $(BASEDIR)src
@@ -11,7 +11,7 @@ TESTS   = $(patsubst $(TESTDIR)/%.c, $(BINDIR)/%, $(wildcard $(TESTDIR)/*.c))
 
 .PHONY: all clean
 
-all: $(OBJDIR) $(BINDIR) $(TESTS)
+all: test test_mem
 
 test: $(OBJDIR) $(BINDIR) $(TESTS)
 	@for test in $(TESTS); do                                                  \
