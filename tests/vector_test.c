@@ -404,6 +404,93 @@ void test_2d_vector_person_struct() {
     vec_free(people_vectors);
 }
 
+int int_compare(int *val1, int *val2) {
+    return (*val1 - *val2);
+}
+
+void test_vector_sort() {
+    Vec(int) vec = vec_new(int);
+    vec_sort(vec, (compare_fn) int_compare);
+    assert(vec_is_empty(vec));
+    vec_push_back(vec, 42);
+    vec_sort(vec, (compare_fn) int_compare);
+    assert(vec_size(vec) == 1);
+    assert(vec[0] == 42);
+    vec_free(vec);
+
+    Vec(int) vec1 = vec_new(int);
+    for (int i = 1; i <= 5; i++) {
+        vec_push_back(vec1, i);
+    }
+    vec_sort(vec1, (compare_fn) int_compare);
+    assert(vec_size(vec1) == 5);
+    for (int i = 0; i < 5; i++) {
+        assert(vec1[i] == i + 1);
+    }
+    vec_free(vec1);
+
+    Vec(int) vec2 = vec_from_array(((int[]) {5, 2, 9, 1, 7}), 5);
+    vec_sort(vec2, (compare_fn) int_compare);
+    assert(vec_size(vec2) == 5);
+    assert(vec2[0] == 1);
+    assert(vec2[1] == 2);
+    assert(vec2[2] == 5);
+    assert(vec2[3] == 7);
+    assert(vec2[4] == 9);
+    vec_free(vec2);
+
+    Vec(int) vec3 = vec_new(int);
+    for (int i = 5; i > 0; i--) {
+        vec_push_back(vec3, i);
+    }
+    vec_sort(vec3, (compare_fn) int_compare);
+    assert(vec_size(vec3) == 5);
+    for (int i = 0; i < 5; i++) {
+        assert(vec3[i] == i + 1);
+    }
+    vec_free(vec3);
+
+    Vec(int) vec4 = vec_new(int);
+    for (int i = 5; i > 0; i--) {
+        vec_push_back(vec4, i);
+        vec_push_back(vec4, i);
+    }
+    vec_sort(vec4, (compare_fn) int_compare);
+    assert(vec_size(vec4) == 10);
+    for (int i = 0; i < 10; i++) {
+        assert(vec4[i] == (i / 2) + 1);
+    }
+    vec_free(vec4);
+
+    Vec(int) vec5 = vec_new(int);
+    vec_push_back(vec5, -5);
+    vec_push_back(vec5, -3);
+    vec_push_back(vec5, -9);
+    vec_push_back(vec5, -1);
+    vec_push_back(vec5, -7);
+    vec_sort(vec5, (compare_fn) int_compare);
+    assert(vec_size(vec5) == 5);
+    for (int i = 0; i < 5; i++) {
+        assert(vec5[i] == -9 + (i * 2));
+    }
+    vec_free(vec5);
+
+    Vec(int) vec6 = vec_new(int);
+    vec_push_back(vec6, -3);
+    vec_push_back(vec6, 7);
+    vec_push_back(vec6, 0);
+    vec_push_back(vec6, -1);
+    vec_push_back(vec6, 5);
+    vec_sort(vec6, (compare_fn) int_compare);
+    assert(vec_size(vec6) == 5);
+    assert(vec6[0] == -3);
+    assert(vec6[1] == -1);
+    assert(vec6[2] == 0);
+    assert(vec6[3] == 5);
+    assert(vec6[4] == 7);
+    vec_free(vec6);
+}
+
 int main() {
     test_vector_basic();
     test_vector_with_capacity();
@@ -420,5 +507,6 @@ int main() {
     test_vector_person_struct();
     test_vector_person_struct_array();
     test_2d_vector_person_struct();
+    test_vector_sort();
     return 0;
 }
