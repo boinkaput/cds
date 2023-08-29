@@ -206,6 +206,13 @@ void *vec_shrink(void *vector);
 void vec_reverse(void *vector);
 
 /**
+ * @brief Sorts the elements of a vector using a custom comparison function.
+ * @param vector The vector to sort.
+ * @param c The custom comparison function used to compare elements.
+ */
+void vec_sort(void *vector, compare_fn c);
+
+/**
  * @brief Creates an iterator for the vector.
  * @param vector The vector.
  * @return An iterator for the vector.

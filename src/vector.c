@@ -15,6 +15,8 @@ typedef struct {
 static void *resize(VectorMeta **vector_meta_ref, size_t new_capacity);
 static size_t find_new_capacity(size_t current_capacity, size_t required_capacity);
 static void swap(void *ptr1, void *ptr2, size_t size);
+static void quicksort(void *vector, compare_fn c, size_t lo, size_t hi);
+static size_t partition(void *vector, compare_fn c, size_t lo, size_t hi);
 static Option vit_next(Iterator *iterator);
 static Option vit_advance(Iterator *iterator, size_t n);
 static size_t vit_size(Iterator *iterator);
@@ -251,7 +253,12 @@ void vec_reverse(void *vector) {
     }
 }
 
-Iterator vec_iter(void *vector) {
+void vec_sort(void *vector, compare_fn c) {
+    quicksort(vector, c, 0, VEC_META_PTR(vector)->size);
+}
+
+Iterator vec_iter(void *vector)
+{
     Iterator iterator = iter_default(VEC_META_PTR(vector), vector, vit_next);
     iterator.advance = vit_advance;
     iterator.size = vit_size;
@@ -292,6 +299,55 @@ static void swap(void *ptr1, void *ptr2, size_t size) {
     memcpy(temp, ptr1, size);
     memcpy(ptr1, ptr2, size);
     memcpy(ptr2, temp, size);
+}
+
+// Performs quicksort.
+static void quicksort(void *vector, compare_fn c, size_t lo, size_t hi) {
+    if ((int) (hi - lo) > 1) {
+        size_t p = partition(vector, c, lo, hi);
+        quicksort(vector, c, lo, p);
+        quicksort(vector, c, p + 1, hi);
+    }
+}
+
+// Partitions the vector such that elements to the left of the pivot are
+// lesser and elements to the right are greater than the pivot. It returns
+// index of the pivot element.
+static size_t partition(void *vector, compare_fn c, size_t lo, size_t hi) {
+    VectorMeta *vector_meta = VEC_META_PTR(vector);
+    void *lo_elem = VEC_GET(vector, lo, vector_meta->elem_size);
+    void *mid_elem = VEC_GET(vector, (lo + hi) / 2, vector_meta->elem_size);
+    void *hi_elem = VEC_GET(vector, hi - 1, vector_meta->elem_size);
+
+    if (c(mid_elem, hi_elem) < 0) {
+        swap(mid_elem, hi_elem, vector_meta->elem_size);
+    }
+    if (c(lo_elem, hi_elem) < 0) {
+        swap(lo_elem, hi_elem, vector_meta->elem_size);
+    }
+    if (c(mid_elem, lo_elem) < 0) {
+        swap(mid_elem, lo_elem, vector_meta->elem_size);
+    }
+
+    void *pivot = lo_elem;
+    while (lo < hi) {
+        do {
+            lo++;
+            lo_elem = VEC_GET(vector, lo, vector_meta->elem_size);
+        } while (c(lo_elem, pivot) < 0);
+
+        do {
+            hi--;
+            hi_elem = VEC_GET(vector, hi, vector_meta->elem_size);
+        } while (c(hi_elem, pivot) > 0);
+
+        if (lo < hi) {
+            swap(lo_elem, hi_elem, vector_meta->elem_size);
+        }
+    }
+
+    swap(pivot, hi_elem, vector_meta->elem_size);
+    return hi;
 }
 
 // Move the iterator by 1 element.
