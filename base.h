@@ -43,19 +43,26 @@
 #endif // NDEBUG
 
 /**
- * @typedef void (*map_fn)(void *value)
  * @brief Function pointer type for mapping functions.
- * @param data The data to process.
+ * @param value The data to process.
  */
 typedef void (*map_fn)(void *value);
 
 /**
- * @typedef bool (*pred_fn)(void *value)
  * @brief Function pointer type for predicate functions.
- * @param data The data to test against a condition.
+ * @param value The value to test against a condition.
  * @return true if the condition is satisfied, false otherwise.
  */
 typedef bool (*pred_fn)(void *value);
+
+/**
+ * @brief Function pointer type for comparator functions.
+ * @param value1 The first value.
+ * @param value1 The second value.
+ * @return 0 if `value1 == value2`, negative value if `value1 < value2`
+ * and positive value if `value1 > value2`
+ */
+typedef int (*compare_fn)(void *value1, void *value2);
 
 
 #endif // BASE_H
