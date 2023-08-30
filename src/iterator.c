@@ -3,8 +3,11 @@
 static Option default_advance(Iterator *iterator, size_t n);
 static size_t default_size(Iterator *iterator);
 
-Iterator iter_default(void *container, void *current,
-                          Option (*next)(Iterator *iterator)) {
+Iterator iter_default(
+    void *container,
+    void *current,
+    Option (*next)(Iterator *iterator)
+) {
     Iterator iterator = {
         .container = container,
         .current = current,
