@@ -3,22 +3,21 @@
 
 #include "iterator.h"
 
-bool iter_all(Iterator *iterator, pred_fn p);
+bool iter_all(Iterator *iterator, pred_fn predicate);
 
-bool iter_any(Iterator *iterator, pred_fn p);
+bool iter_any(Iterator *iterator, pred_fn predicate);
 
-Option iter_find(Iterator *iterator, pred_fn p);
+Option iter_find(Iterator *iterator, pred_fn predicate);
 
-Option iter_find_map(Iterator *iterator, Option (*func)(void *));
+Option iter_find_map(Iterator *iterator, map_opt_fn unary_op);
 
-int iter_find_index(Iterator *iterator, pred_fn p);
+int iter_find_index(Iterator *iterator, pred_fn predicate);
 
-bool iter_is_partitioned(Iterator *iterator, pred_fn p);
+bool iter_is_partitioned(Iterator *iterator, pred_fn predicate);
 
-bool iter_is_sorted(Iterator *iterator, bool (*comp)(void *, void *));
+bool iter_is_sorted(Iterator *iterator, compare_fn compare);
 
-bool iter_compare(Iterator *iterator1, Iterator *iterator2,
-                  bool (*comp)(void *, void *));
+int iter_compare(Iterator *iterator1, Iterator *iterator2, compare_fn compare);
 
 Option iter_last(Iterator *iterator);
 
@@ -30,8 +29,11 @@ void iter_reduce(Iterator *iterator, void (*func)(void *, void *),
 #define for_each(type, variable, iterator, body)                               \
     do {                                                                       \
         Iterator _it = iterator;                                               \
-        for (Option option = iter_next(_it); option.is_valid;                  \
-            option = iter_next(_it)) {                                         \
+        for (                                                                  \
+            Option option = iter_next(_it);                                    \
+            option.is_valid;                                                   \
+            option = iter_next(_it)                                            \
+        ) {                                                                    \
             type variable = option_unwrap(option, type);                       \
             body                                                               \
         }                                                                      \
@@ -40,9 +42,12 @@ void iter_reduce(Iterator *iterator, void (*func)(void *, void *),
 #define for_each_step(type, variable, iterator, step, body)                    \
     do {                                                                       \
         Iterator _it = iterator;                                               \
-        size_t st = step;                                                      \
-        for (Option option = iter_advance(_it, st); option.is_valid;           \
-            option = iter_advance(_it, st)) {                                  \
+        size_t _st = step;                                                     \
+        for (                                                                  \
+            Option option = iter_advance(_it, _st);                            \
+            option.is_valid;                                                   \
+            option = iter_advance(_it, _st)                                    \
+        ) {                                                                    \
             type variable = option_unwrap(option, type);                       \
             body                                                               \
         }                                                                      \
@@ -52,23 +57,19 @@ void iter_reduce(Iterator *iterator, void (*func)(void *, void *),
 
 typedef struct {
     Iterator *iterator;
-    map_fn f;
+    map_fn unary_op;
 } Map;
 
-Map map_new(Iterator *iterator, map_fn f);
-
-Iterator map_iter(Map *map);
+Iterator map_iter(Map *map, Iterator *iterator, map_fn unary_op);
 
 /*------------------------------- IterFilter --------------------------------*/
 
 typedef struct {
     Iterator *iterator;
-    pred_fn p;
+    pred_fn predicate;
 } Filter;
 
-Filter filter_new(Iterator *iterator, pred_fn p);
-
-Iterator filter_iter(Filter *filter);
+Iterator filter_iter(Filter *filter, Iterator *iterator, pred_fn predicate);
 
 
 #endif // ITER_UTILS_H
