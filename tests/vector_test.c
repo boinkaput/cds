@@ -404,7 +404,7 @@ void test_2d_vector_person_struct() {
     vec_free(people_vectors);
 }
 
-int int_compare(int *val1, int *val2) {
+int int_compare(const int *val1, const int *val2) {
     return (*val1 - *val2);
 }
 

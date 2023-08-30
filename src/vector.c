@@ -15,8 +15,8 @@ typedef struct {
 static void *resize(VectorMeta **vector_meta_ref, size_t new_capacity);
 static size_t find_new_capacity(size_t current_capacity, size_t required_capacity);
 static void swap(void *ptr1, void *ptr2, size_t size);
-static void quicksort(void *vector, compare_fn c, size_t lo, size_t hi);
-static size_t partition(void *vector, compare_fn c, size_t lo, size_t hi);
+static void quicksort(void *vector, compare_fn compare, size_t lo, size_t hi);
+static size_t partition(void *vector, compare_fn compare, size_t lo, size_t hi);
 static Option vit_next(Iterator *iterator);
 static Option vit_advance(Iterator *iterator, size_t n);
 static size_t vit_size(Iterator *iterator);
@@ -38,19 +38,44 @@ void *internal_vec_new(size_t elem_size, VecArgs args, size_t size) {
     return memset(VEC_PTR(vector_meta), 0, elem_size * args.cap);
 }
 
-size_t vec_size(void *vector) {
+size_t internal_vec_slice(const void *vector, void *buffer, VecSliceArgs args) {
+    VectorMeta *vector_meta = VEC_META_PTR(vector);
+    ASSERT(
+        args.start <= args.end,
+        "start (is %zu) should be <= end (is %zu)",
+        args.start,
+        args.end
+    );
+    ASSERT(
+        args.end <= vector_meta->size,
+        "end (is %zu) should be <= vector_size (is %zu)",
+        args.end,
+        vector_meta->size
+    );
+    ASSERT(buffer != NULL, "buffer must be a non NULL pointer");
+
+    // Copy elements from vec to the buffer.
+    memcpy(
+        buffer,
+        VEC_GET(vector, args.start, vector_meta->elem_size),
+        (args.end - args.start) * vector_meta->elem_size
+    );
+    return args.end - args.start;
+}
+
+size_t vec_size(const void *vector) {
     return VEC_META_PTR(vector)->size;
 }
 
-size_t vec_capacity(void *vector) {
+size_t vec_capacity(const void *vector) {
     return VEC_META_PTR(vector)->capacity;
 }
 
-bool vec_is_empty(void *vector) {
+bool vec_is_empty(const void *vector) {
     return vec_size(vector) == 0;
 }
 
-void *internal_vec_insert(void *vector, void *elem, size_t index) {
+void *internal_vec_insert(void *vector, const void *elem, size_t index) {
     VectorMeta *vector_meta = VEC_META_PTR(vector);
     ASSERT(
         index <= vector_meta->size,
@@ -81,7 +106,7 @@ void *internal_vec_insert(void *vector, void *elem, size_t index) {
     return vector;
 }
 
-void *internal_vec_push_back(void *vector, void *elem) {
+void *internal_vec_push_back(void *vector, const void *elem) {
     VectorMeta *vector_meta = VEC_META_PTR(vector);
     vector = resize(
         &vector_meta,
@@ -99,7 +124,7 @@ void *internal_vec_push_back(void *vector, void *elem) {
     return vector;
 }
 
-void *internal_vec_extend(void *vector, void *array, size_t size) {
+void *internal_vec_extend(void *vector, const void *array, size_t size) {
     VectorMeta *vector_meta = VEC_META_PTR(vector);
     vector = resize(
         &vector_meta,
@@ -217,31 +242,6 @@ void *vec_shrink(void *vector) {
     return vector;
 }
 
-size_t internal_vec_slice(void *vector, void *buffer, VecSliceArgs args) {
-    VectorMeta *vector_meta = VEC_META_PTR(vector);
-    ASSERT(
-        args.start <= args.end,
-        "start (is %zu) should be <= end (is %zu)",
-        args.start,
-        args.end
-    );
-    ASSERT(
-        args.end <= vector_meta->size,
-        "end (is %zu) should be <= vector_size (is %zu)",
-        args.end,
-        vector_meta->size
-    );
-    ASSERT(buffer != NULL, "buffer must be a non NULL pointer");
-
-    // Copy elements from vec to the buffer.
-    memcpy(
-        buffer,
-        VEC_GET(vector, args.start, vector_meta->elem_size),
-        (args.end - args.start) * vector_meta->elem_size
-    );
-    return args.end - args.start;
-}
-
 void vec_reverse(void *vector) {
     VectorMeta *vector_meta = VEC_META_PTR(vector);
     for (size_t i = 0, j = vector_meta->size - 1; i < j; i++, j--) {
@@ -253,12 +253,11 @@ void vec_reverse(void *vector) {
     }
 }
 
-void vec_sort(void *vector, compare_fn c) {
-    quicksort(vector, c, 0, VEC_META_PTR(vector)->size);
+void vec_sort(void *vector, compare_fn compare) {
+    quicksort(vector, compare, 0, VEC_META_PTR(vector)->size);
 }
 
-Iterator vec_iter(void *vector)
-{
+Iterator vec_iter(void *vector) {
     Iterator iterator = iter_default(VEC_META_PTR(vector), vector, vit_next);
     iterator.advance = vit_advance;
     iterator.size = vit_size;
@@ -302,30 +301,30 @@ static void swap(void *ptr1, void *ptr2, size_t size) {
 }
 
 // Performs quicksort.
-static void quicksort(void *vector, compare_fn c, size_t lo, size_t hi) {
+static void quicksort(void *vector, compare_fn compare, size_t lo, size_t hi) {
     if ((int) (hi - lo) > 1) {
-        size_t p = partition(vector, c, lo, hi);
-        quicksort(vector, c, lo, p);
-        quicksort(vector, c, p + 1, hi);
+        size_t p = partition(vector, compare, lo, hi);
+        quicksort(vector, compare, lo, p);
+        quicksort(vector, compare, p + 1, hi);
     }
 }
 
 // Partitions the vector such that elements to the left of the pivot are
 // lesser and elements to the right are greater than the pivot. It returns
 // index of the pivot element.
-static size_t partition(void *vector, compare_fn c, size_t lo, size_t hi) {
+static size_t partition(void *vector, compare_fn compare, size_t lo, size_t hi) {
     VectorMeta *vector_meta = VEC_META_PTR(vector);
     void *lo_elem = VEC_GET(vector, lo, vector_meta->elem_size);
     void *mid_elem = VEC_GET(vector, (lo + hi) / 2, vector_meta->elem_size);
     void *hi_elem = VEC_GET(vector, hi - 1, vector_meta->elem_size);
 
-    if (c(mid_elem, hi_elem) < 0) {
+    if (compare(mid_elem, hi_elem) < 0) {
         swap(mid_elem, hi_elem, vector_meta->elem_size);
     }
-    if (c(lo_elem, hi_elem) < 0) {
+    if (compare(lo_elem, hi_elem) < 0) {
         swap(lo_elem, hi_elem, vector_meta->elem_size);
     }
-    if (c(mid_elem, lo_elem) < 0) {
+    if (compare(mid_elem, lo_elem) < 0) {
         swap(mid_elem, lo_elem, vector_meta->elem_size);
     }
 
@@ -334,12 +333,12 @@ static size_t partition(void *vector, compare_fn c, size_t lo, size_t hi) {
         do {
             lo++;
             lo_elem = VEC_GET(vector, lo, vector_meta->elem_size);
-        } while (c(lo_elem, pivot) < 0);
+        } while (compare(lo_elem, pivot) < 0);
 
         do {
             hi--;
             hi_elem = VEC_GET(vector, hi, vector_meta->elem_size);
-        } while (c(hi_elem, pivot) > 0);
+        } while (compare(hi_elem, pivot) > 0);
 
         if (lo < hi) {
             swap(lo_elem, hi_elem, vector_meta->elem_size);

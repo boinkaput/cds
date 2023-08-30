@@ -89,8 +89,8 @@
  */
 #define vec_insert(vector, elem, index)                                        \
     do {                                                                       \
-        typeof(*vector) e = elem;                                              \
-        vector = internal_vec_insert(vector, &e, index);                       \
+        typeof(*vector) _e = elem;                                             \
+        vector = internal_vec_insert(vector, &_e, index);                      \
     } while(0)
 
 /**
@@ -101,8 +101,8 @@
  */
 #define vec_push_back(vector, elem)                                            \
     do {                                                                       \
-        typeof(*vector) e = elem;                                              \
-        vector = internal_vec_push_back(vector, &e);                           \
+        typeof(*vector) _e = elem;                                             \
+        vector = internal_vec_push_back(vector, &_e);                          \
     } while(0)
 
 /**
@@ -114,7 +114,8 @@
  */
 #define vec_extend(vector, array, size)                                        \
     do {                                                                       \
-        vector = internal_vec_extend(vector, array, size);                     \
+        typeof(vector) _a = array;                                             \
+        vector = internal_vec_extend(vector, _a, size);                        \
     } while (0)
 
 /**
@@ -122,21 +123,21 @@
  * @param vector The vector.
  * @return The size of the vector.
  */
-size_t vec_size(void *vector);
+size_t vec_size(const void *vector);
 
 /**
  * @brief Returns the capacity of the vector.
  * @param vector The vector.
  * @return The capacity of the vector.
  */
-size_t vec_capacity(void *vector);
+size_t vec_capacity(const void *vector);
 
 /**
  * @brief Checks if the vector is empty.
  * @param vector The vector.
  * @return `true` if the vector is empty, `false` otherwise.
  */
-bool vec_is_empty(void *vector);
+bool vec_is_empty(const void *vector);
 
 /**
  * @brief Erases an element at the specified index in the vector.
@@ -145,6 +146,8 @@ bool vec_is_empty(void *vector);
  * @param elem A pointer to store the erased element.
  * @note Supply NULL for `elem` if you don't care about the erased value.
  * @note The capacity of vector remains the same (i.e. free is not called).
+ * @note vec_swap_erase is a faster alternative to this function, but it does
+ * not maintain the order of the vector.
  */
 void vec_erase(void *vector, size_t index, void *elem);
 
@@ -210,7 +213,7 @@ void vec_reverse(void *vector);
  * @param vector The vector to sort.
  * @param c The custom comparison function used to compare elements.
  */
-void vec_sort(void *vector, compare_fn c);
+void vec_sort(void *vector, compare_fn compare);
 
 /**
  * @brief Creates an iterator for the vector.
@@ -266,6 +269,15 @@ typedef struct {
 void *internal_vec_new(size_t elem_size, VecArgs args, size_t size);
 
 /**
+ * @brief Creates a slice of the vector.
+ * @param vector The vector.
+ * @param buffer The buffer to which the elements are copied to.
+ * @param args The start and end indices of the slice.
+ * @return The size of the slice.
+ */
+size_t internal_vec_slice(const void *vector, void *buffer, VecSliceArgs args);
+
+/**
  * @brief Internal function to insert an element into the vector at the
  * specified index.
  * @param vector The vector.
@@ -273,7 +285,7 @@ void *internal_vec_new(size_t elem_size, VecArgs args, size_t size);
  * @param index The index at which to insert the element.
  * @return The vector with the inserted element.
  */
-void *internal_vec_insert(void *vector, void *elem, size_t index);
+void *internal_vec_insert(void *vector, const void *elem, size_t index);
 
 /**
  * @brief Internal function to push an element to the back of the vector.
@@ -281,7 +293,7 @@ void *internal_vec_insert(void *vector, void *elem, size_t index);
  * @param elem A pointer to the element to push.
  * @return The vector with the pushed element.
  */
-void *internal_vec_push_back(void *vector, void *elem);
+void *internal_vec_push_back(void *vector, const void *elem);
 
 /**
  * @brief Internal function to extend the vector by copying elements
@@ -291,16 +303,7 @@ void *internal_vec_push_back(void *vector, void *elem);
  * @param size The size of the array.
  * @return The vector with the extended elements.
  */
-void *internal_vec_extend(void *vector, void *array, size_t size);
-
-/**
- * @brief Creates a slice of the vector.
- * @param vector The vector.
- * @param buffer The buffer to which the elements are copied to.
- * @param args The start and end indices of the slice.
- * @return The size of the slice.
- */
-size_t internal_vec_slice(void *vector, void *buffer, VecSliceArgs args);
+void *internal_vec_extend(void *vector, const void *array, size_t size);
 
 
 #endif // VECTOR_H
