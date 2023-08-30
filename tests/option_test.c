@@ -81,11 +81,11 @@ void test_option_map() {
     assert(!opt2.is_valid);
 }
 
-bool filter1(int *k) {
+bool filter1(const int *k) {
     return *k == 1;
 }
 
-bool filter2(int *k) {
+bool filter2(const int *k) {
     return *k == 3;
 }
 
@@ -148,11 +148,11 @@ void map_complex(struct complex *comp) {
     comp->i = 101;
 }
 
-bool filter_complex1(struct complex *comp) {
+bool filter_complex1(const struct complex *comp) {
     return comp->c == 'y' && comp->i == 101;
 }
 
-bool filter_complex2(struct complex *comp) {
+bool filter_complex2(const struct complex *comp) {
     return comp->c == 'y' && comp->d == 0;
 }
 
@@ -202,8 +202,12 @@ void test_option_and_then_complex() {
         .d = 15.555
     };
     Option opt = option_some(&comp);
-    assert(complex_equal(option_unwrap(option_and_then(opt, (map_opt_fn) then_complex), struct complex),
-                         (struct complex) { .i = 10, .c = 'z', .f = 7.77, .d = 15.555 }));
+    assert(
+        complex_equal(
+            option_unwrap(option_and_then(opt, (map_opt_fn) then_complex), struct complex),
+            (struct complex) { .i = 10, .c = 'z', .f = 7.77, .d = 15.555 }
+        )
+    );
 }
 
 void test_option_filter_complex() {
@@ -221,8 +225,12 @@ void test_option_filter_complex() {
     };
     Option opt1 = option_some(&comp1);
     Option opt2 = option_some(&comp2);
-    assert(complex_equal(option_unwrap(option_filter(opt1, (pred_fn) filter_complex_float),
-                                       struct complex), comp1));
+    assert(
+        complex_equal(
+            option_unwrap(option_filter(opt1, (pred_fn) filter_complex_float), struct complex),
+            comp1
+        )
+    );
     assert(!option_filter(opt2, (pred_fn) filter_complex_float).is_valid);
 }
 
@@ -234,13 +242,25 @@ void test_option_complex() {
         .d = 105.4551
     };
     Option opt = option_some(&comp);
-    assert(complex_equal(option_unwrap(opt, struct complex),
-                         (struct complex) { .i = 3, .c = 'f', .f = -7.1, .d = 105.4551 }));
+    assert(
+        complex_equal(
+            option_unwrap(opt, struct complex),
+            (struct complex) { .i = 3, .c = 'f', .f = -7.1, .d = 105.4551 }
+        )
+    );
     option_map(opt, (map_fn) map_complex);
-    assert(complex_equal(option_unwrap(opt, struct complex),
-                         (struct complex) { .i = 101, .c = 'y', .f = -7.1, .d = 105.4551 }));
-    assert(complex_equal(option_unwrap(option_filter(opt, (pred_fn) filter_complex1), struct complex),
-                         (struct complex) { .i = 101, .c = 'y', .f = -7.1, .d = 105.4551 }));
+    assert(
+        complex_equal(
+            option_unwrap(opt, struct complex),
+            (struct complex) { .i = 101, .c = 'y', .f = -7.1, .d = 105.4551 }
+        )
+    );
+    assert(
+        complex_equal(
+            option_unwrap(option_filter(opt, (pred_fn) filter_complex1), struct complex),
+            (struct complex) { .i = 101, .c = 'y', .f = -7.1, .d = 105.4551 }
+        )
+    );
     assert(!option_filter(opt, (pred_fn) filter_complex2).is_valid);
 }
 
@@ -253,10 +273,18 @@ void test_option_alloc_complex() {
 
     Option opt = option_some(comp);
     option_map(opt, (map_fn) map_complex);
-    assert(complex_equal(option_unwrap(opt, struct complex),
-                         (struct complex) { .i = 101, .c = 'y', .f = 2.5, .d = 10.15 }));
-    assert(complex_equal(option_unwrap(option_filter(opt, (pred_fn) filter_complex1), struct complex),
-                         (struct complex) { .i = 101, .c = 'y', .f = 2.5, .d = 10.15 }));
+    assert(
+        complex_equal(
+            option_unwrap(opt, struct complex),
+            (struct complex) { .i = 101, .c = 'y', .f = 2.5, .d = 10.15 }
+        )
+    );
+    assert(
+        complex_equal(
+            option_unwrap(option_filter(opt, (pred_fn) filter_complex1), struct complex),
+            (struct complex) { .i = 101, .c = 'y', .f = 2.5, .d = 10.15 }
+        )
+    );
     assert(opt.is_valid);
     free(comp);
 }
