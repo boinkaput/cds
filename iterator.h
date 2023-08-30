@@ -13,8 +13,11 @@ typedef struct iterator {
     size_t (*size)(struct iterator *iterator);
 } Iterator;
 
-Iterator iter_default(void *container, void *current,
-                      Option (*next)(Iterator *iterator));
+Iterator iter_default(
+    void *container,
+    void *current,
+    Option (*next)(Iterator *iterator)
+);
 
 
 #define iter_next(iterator)                                \
