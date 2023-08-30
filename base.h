@@ -53,7 +53,7 @@ typedef void (*map_fn)(void *value);
  * @param value The value to test against a condition.
  * @return true if the condition is satisfied, false otherwise.
  */
-typedef bool (*pred_fn)(void *value);
+typedef bool (*pred_fn)(const void *value);
 
 /**
  * @brief Function pointer type for comparator functions.
@@ -62,7 +62,7 @@ typedef bool (*pred_fn)(void *value);
  * @return 0 if `value1 == value2`, negative value if `value1 < value2`
  * and positive value if `value1 > value2`
  */
-typedef int (*compare_fn)(void *value1, void *value2);
+typedef int (*compare_fn)(const void *value1, const void *value2);
 
 
 #endif // BASE_H
